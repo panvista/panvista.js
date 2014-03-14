@@ -24,7 +24,7 @@ You can view our API documentation [here](https://panvista.atlassian.net/wiki/di
 ```js
 Panvista.Sections.list(function(sections) {
     Panvista.Util.each(sections, function(section) {
-        document.w    rite('<p><a href="' + section.url + '">' + section.label + '</a></p>');
+        document.write('<p><a href="' + section.url + '">' + section.label + '</a></p>');
     });
 });
 ```
