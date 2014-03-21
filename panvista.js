@@ -69,7 +69,7 @@ Panvista.Articles = (function() {
                 }
 
                 var articles         = {};
-                articles.items       = Panvista.Articles._parseArticleData(xml.getElementsByTagName('list')[0].children);
+                articles.items       = Panvista.Articles._parseArticleData(xml.getElementsByTagName('item'));
                 articles.total       = xml.getElementsByTagName('pagination')[0].getAttribute('totalItemCount');
                 articles.currentPage = xml.getElementsByTagName('pagination')[0].getAttribute('pageNumber');
                 articles.totalPages  = xml.getElementsByTagName('pagination')[0].getAttribute('pageCount');
@@ -86,11 +86,11 @@ Panvista.Articles = (function() {
 
                 var article     = {};
                 article.id      = id;
-                article.section = { id: xml.getElementsByTagName('category')[0].getAttribute('id'),
-                                    label: xml.getElementsByTagName('category')[0].getAttribute('label')}
+                article.section = {id: xml.getElementsByTagName('category')[0].getAttribute('id'),
+                                   label: xml.getElementsByTagName('category')[0].getAttribute('label')};
                 article.title   = xml.getElementsByTagName("rawView")[0].getAttribute('title');
                 article.date    = xml.getElementsByTagName("rawView")[0].getAttribute('publishDate');
-                article.content = xml.getElementsByTagName("rawView")[0].innerHTML.replace("<![CDATA[", "").replace("]]>", "");
+                article.content = xml.getElementsByTagName("rawView")[0].firstChild.data;
                 callback(article);
             });
         },
@@ -103,7 +103,16 @@ Panvista.Articles = (function() {
                 articles[i].id          = items[i].getAttribute('id');
                 articles[i].title       = items[i].getAttribute('title');
                 articles[i].image       = items[i].getAttribute('imageUrl');
-                articles[i].previewText = items[i].firstChild.nextElementSibling.innerHTML;
+                articles[i].previewText = items[i].getElementsByTagName('p')[0].textContent;
+                articles[i].images      = new Array();
+
+                var imgNodes = items[i].getElementsByTagName('img');
+
+                for (var x = 0; x < imgNodes.length; x++) {;
+                    articles[i].images[x] = {'src'   : imgNodes[x].getAttribute('src'),
+                                             'width' : imgNodes[x].getAttribute('width'),
+                                             'height': imgNodes[x].getAttribute('height')};
+                }
             }
 
             return articles;
