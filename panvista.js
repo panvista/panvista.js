@@ -9,7 +9,7 @@ Panvista.Sections = (function() {
         /**
          * Get a list of sections.
          *
-         * @return array
+         * @param  function callback
          */
         list : function(callback) {
             PvRequest.load('/api/site/sections', function (xml) {
@@ -49,7 +49,9 @@ Panvista.Articles = (function() {
         /**
          * Get a list of sections.
          *
-         * @return array
+         * @param string     id       The id of the article list section
+         * @param dictionary options
+         * @param function   callback
          */
         list : function(id, options, callback) {
             var url = '/xml/mobile/list/categoryId/' + id + '?';
@@ -77,6 +79,12 @@ Panvista.Articles = (function() {
                 callback(articles);
             });
         },
+        /**
+         * Get the requested article
+         *
+         * @param  string   id       The id of the article
+         * @param  function callback
+         */
         get : function(id, callback) {
             PvRequest.load('/xml/mobile/article?id=' + id + '&format=xml', function (xml) {
                 if (xml == null || xml.getElementsByTagName("webView").length < 0) {
@@ -125,12 +133,23 @@ Panvista.Util = (function() {
 
     return {
         device : null,
+        paramKey : 'panvista-param-',
+        params : new Object(),
+        init : function() {
+            for (var i = 0; i < localStorage.length; i++) {
+                if (localStorage.key(i).substring(0, Panvista.Util.paramKey.length) == Panvista.Util.paramKey) {
+                    Panvista.Util.params[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
+                }
+            }
+            for (var key in Panvista.Util.params) {
+                localStorage.removeItem(key);
+            }
+        },
         /**
          * Get a list of sections.
          *
-         * @param object
-         * @param callback
-         * @return array
+         * @param  object    object
+         * @param  function  callback
          */
         each : function(object, callback) {
             for (var key in object) {
@@ -139,6 +158,11 @@ Panvista.Util = (function() {
                 }
             }
         },
+        /**
+         * Get the current device
+         *
+         * @return string|null
+         */
         getDevice : function() {
             if (Panvista.Util.device != null) {
                 return Panvista.Util.device;
@@ -154,11 +178,39 @@ Panvista.Util = (function() {
             }
             return null;
         },
+        /**
+         * Set the current device for the reqeust
+         *
+         * @param string
+         */
         setDevice : function(device) {
             Panvista.Util.device = device;
+        },
+        /**
+         * Set a parameter to be passed through to the next page
+         *
+         * @param string key
+         * @param mixed  value
+         */
+        setParam : function(key, value) {
+            localStorage.setItem(Panvista.Util.paramKey + key, value);
+        },
+        /**
+         * Get a parameter that was passed through from the previous page
+         *
+         * @param  string key
+         * @return mixed
+         */
+        getParam : function(key) {
+            key = Panvista.Util.paramKey + key;
+            if (key in Panvista.Util.params) {
+                return Panvista.Util.params[key];
+            }
+            return null;
         }
     };
 })();
+Panvista.Util.init();
 
 PvRequest = (function() {
     "use strict";
