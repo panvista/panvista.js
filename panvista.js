@@ -54,7 +54,11 @@ Panvista.Articles = (function() {
          * @param function   callback
          */
         list : function(id, options, callback) {
-            var url = '/xml/mobile/list/categoryId/' + id + '?';
+            var url = '/xml/mobile/list/categoryId/' + id;
+
+            if (options.length > 0) {
+                url += '?';
+            }
 
             if (!isNaN(parseInt(options.page))) {
                 url += 'pageNumber=' + parseInt(options.page) + '&';
@@ -207,6 +211,9 @@ Panvista.Util = (function() {
                 return Panvista.Util.params[key];
             }
             return null;
+        },
+        parseXml : function(xml) {
+            return (new window.DOMParser()).parseFromString(xml, "text/xml");
         }
     };
 })();
@@ -217,13 +224,19 @@ PvRequest = (function() {
 
     return {
         load : function(endpoint, callback) {
-            var xml = null;
+            var xml    = null,
+                result = null;
 
             switch (endpoint) {
                 case '/api/site/sections':
-                    xml = typeof(sectionsBridge) == "object" ? (new window.DOMParser()).parseFromString(sectionsBridge.getSections(), "text/xml") : null;
+                    result = typeof(sectionsBridge) == "object" ? sectionsBridge.getSections() : undefined;
+                    xml    = typeof(result) != "undefined" ? Panvista.Util.parseXml(result) : null;
                 break;
-            }
+                default:
+                    result = typeof(sectionsBridge) == "object" ? sectionsBridge.getXmlData(endpoint) : undefined;
+                    xml    = typeof(result) != "undefined" ? Panvista.Util.parseXml(result) : null;
+                break;
+            };
 
             if (xml) {
                 callback(xml);
@@ -239,7 +252,7 @@ PvRequest = (function() {
                 }
 
                 if(request.status == 200 && request.readyState === 4) {
-                    callback(request.responseXML ? request.responseXML : request.responseText);
+                    callback(request.responseXML ? request.responseXML : null);
                     return;
                 }
 
