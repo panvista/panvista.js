@@ -132,6 +132,46 @@ Panvista.Articles = (function() {
     };
 })();
 
+Panvista.Content = (function() {
+    "use strict";
+
+    return {
+        list : function(id, options, callback) {
+            var url = '/api/content/list?id=' + id;
+
+            if (options.length > 0) {
+                url += '?';
+            }
+
+            if (!isNaN(parseInt(options.page))) {
+                url += 'page=' + parseInt(options.page) + '&';
+            }
+
+            if (!isNaN(parseInt(options.limit))) {
+                url += 'limit=' + parseInt(options.limit) + '&';
+            }
+            PvRequest.load(url, function (xml) {
+                if (xml == null || xml.getElementsByTagName("documents")[0] == undefined) {
+                    callback({error: true}); //Return an empty object
+                    return;
+                }
+                callback(xml.getElementsByTagName("documents")[0]);
+            });
+        },
+        get : function(section_id, id, callback) {
+            var url = '/api/content/document?section_id=' + section_id + '&id=' + id;
+
+            PvRequest.load(url, function (xml) {
+                if (xml == null || xml.getElementsByTagName("document")[0] == undefined) {
+                    callback({error: true}); //Return an empty object
+                    return;
+                }
+                callback(xml.getElementsByTagName("document")[0]);
+            });
+        }
+    }
+})();
+
 Panvista.Util = (function() {
     "use strict";
 
