@@ -279,7 +279,7 @@ PvRequest = (function() {
                 break;
             };
 
-            if (xml) {
+            if (xml && result.length != 0) {
                 callback(xml);
                 return;
             }
