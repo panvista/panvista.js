@@ -56,7 +56,7 @@ Panvista.Articles = (function() {
         list : function(id, options, callback) {
             var url = '/xml/mobile/list/categoryId/' + id;
 
-            if (options.length > 0) {
+            if (Object.keys(options).length > 0) {
                 url += '?';
             }
 
@@ -139,17 +139,18 @@ Panvista.Content = (function() {
         list : function(id, options, callback) {
             var url = '/api/content/list?id=' + id;
 
-            if (options.length > 0) {
-                url += '?';
-            }
-
             if (!isNaN(parseInt(options.page))) {
-                url += 'page=' + parseInt(options.page) + '&';
+                url += '&page=' + parseInt(options.page);
             }
 
             if (!isNaN(parseInt(options.limit))) {
-                url += 'limit=' + parseInt(options.limit) + '&';
+                url += '&limit=' + parseInt(options.limit);
             }
+
+            if (typeof(options.filter) == "object") {
+                url += '&filter=' + encodeURIComponent(JSON.stringify(options.filter));
+            }
+
             PvRequest.load(url, function (xml) {
                 if (xml == null || xml.getElementsByTagName("documents")[0] == undefined) {
                     callback({error: true}); //Return an empty object
