@@ -151,6 +151,10 @@ Panvista.Content = (function() {
                 url += '&filter=' + encodeURIComponent(JSON.stringify(options.filter));
             }
 
+            if (typeof(options.query) == "string") {
+                url += '&query=' + encodeURIComponent(options.query);
+            }
+
             PvRequest.load(url, function (xml) {
                 if (xml == null || xml.getElementsByTagName("documents")[0] == undefined) {
                     callback({error: true}); //Return an empty object
