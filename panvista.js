@@ -193,6 +193,27 @@ Panvista.Util = (function() {
             for (var key in Panvista.Util.params) {
                 localStorage.removeItem(key);
             }
+            if (typeof(environmentBridge) == "object") {
+                var parseQueryString = function(queryString) {
+                    var params = {}, queries, temp, i, l;
+
+                    queries = queryString.split("&");
+
+                    for ( i = 0, l = queries.length; i < l; i++ ) {
+                        temp = queries[i].split('=');
+                        params[temp[0]] = temp[1];
+                    }
+
+                    return params;
+                };
+                var url = environmentBridge.getContentURL();
+                var params = parseQueryString(url.substring( url.indexOf('?') + 1 ));
+                for (var key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        Panvista.Util.params[key] = params[key];
+                    }
+                }
+            }
         },
         /**
          * Get a list of sections.
