@@ -80,6 +80,7 @@ Panvista.Articles = (function() {
                 articles.currentPage = xml.getElementsByTagName('pagination')[0].getAttribute('pageNumber');
                 articles.totalPages  = xml.getElementsByTagName('pagination')[0].getAttribute('pageCount');
                 articles.limit       = xml.getElementsByTagName('pagination')[0].getAttribute('pageLimit');
+                Panvista.Analytics.add('viewCategory', {id: id});
                 callback(articles);
             });
         },
@@ -103,6 +104,7 @@ Panvista.Articles = (function() {
                 article.title   = xml.getElementsByTagName("rawView")[0].getAttribute('title');
                 article.date    = xml.getElementsByTagName("rawView")[0].getAttribute('publishDate');
                 article.content = xml.getElementsByTagName("rawView")[0].firstChild.data;
+                Panvista.Analytics.add('viewItem', {id: id, data : {type : "article"}});
                 callback(article);
             });
         },
@@ -160,6 +162,7 @@ Panvista.Content = (function() {
                     callback({error: true}); //Return an empty object
                     return;
                 }
+                Panvista.Analytics.add('viewCategory', {id: id});
                 callback(xml.getElementsByTagName("documents")[0]);
             });
         },
@@ -171,6 +174,7 @@ Panvista.Content = (function() {
                     callback({error: true}); //Return an empty object
                     return;
                 }
+                Panvista.Analytics.add('viewItem', {id: id, data : {type : "content"}});
                 callback(xml.getElementsByTagName("document")[0]);
             });
         }
@@ -195,6 +199,33 @@ Panvista.Search = (function() {
                 }
                 callback(xml.getElementsByTagName("results")[0]);
             });
+        }
+    }
+})();
+
+Panvista.Analytics = (function() {
+    "use strict";
+
+    return {
+        add : function(type, action) {
+            var payload = {};
+            payload.appId = typeof(userBridge) == "object" ? userBridge.getAppId() : null;
+
+            if (!payload.appId) {
+                return;
+            }
+
+            var accessToken = typeof(userBridge) == "object" ? userBridge.getTokenSecret() : undefined;
+
+            if (typeof(accessToken) == 'string') {
+                payload.accessToken = accessToken;
+            }
+
+            action.timestamp = new Date().getTime();
+            action.device = Panvista.Util.getDevice();
+            payload.payload = {};
+            payload.payload[type] = [action];
+            PvRequest.load('/api/analytics/data?s=' + encodeURIComponent(JSON.stringify(payload)), function(xml) {});
         }
     }
 })();
@@ -350,7 +381,14 @@ PvRequest = (function() {
             } else {
                 var request = function() {
                     var request = new XMLHttpRequest();
-                    request.open('GET', url, true);
+
+                    if (endpoint.substring(0, 19) == '/api/analytics/data') {
+                        request.open('POST', url, true);
+                        request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    } else {
+                        request.open('GET', url, true);
+                    }
+
                     return request;
                 }();
             }
@@ -372,6 +410,7 @@ PvRequest = (function() {
             request.onreadystatechange = responseCallback;
             request.setRequestHeader('X-JSMobileApp-Id', 'PVJSApi');
             request.setRequestHeader('X-JSMobileApp-Version', '0.7');
+            request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
             if (endpoint.substring(0, 5) == '/xml/') {
                 request.setRequestHeader('X-JSMobileApp-Api', '6');
