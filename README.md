@@ -50,3 +50,18 @@ Panvista.Sections.list(function(sections) {
     document.write('<ul>' + html + '</ul>');
 });
 ```
+
+## Development Mode
+
+You can include the "panvista.development.js" file to help you develop your applications in the browser outside of the application.
+
+### Usage
+```html
+<script src="panvista.development.js"></script>
+<script>
+    PvDev.Settings.setDomain("yourapp.panvistamobile.com");
+    PvDev.Settings.setUserTokens("ACCESS_TOKEN", "TOKEN_SECRET");
+</script>
+```
+
+Note: Please ensure you remove the development code before you uploading your application.

@@ -260,7 +260,7 @@ Panvista.Util = (function() {
                     return params;
                 };
                 var url = environmentBridge.getContentURL();
-                var params = parseQueryString(url.substring( url.indexOf('?') + 1 ));
+                var params = parseQueryString(url.substring(url.indexOf('?') + 1));
                 for (var key in params) {
                     if (params.hasOwnProperty(key)) {
                         Panvista.Util.params[key] = params[key];
