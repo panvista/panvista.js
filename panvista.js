@@ -263,7 +263,7 @@ Panvista.Util = (function() {
                 var params = parseQueryString(url.substring(url.indexOf('?') + 1));
                 for (var key in params) {
                     if (params.hasOwnProperty(key)) {
-                        Panvista.Util.params[key] = params[key];
+                        Panvista.Util.params[Panvista.Util.paramKey + key] = params[key];
                     }
                 }
             }
