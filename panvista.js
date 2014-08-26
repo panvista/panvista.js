@@ -12,7 +12,7 @@ Panvista.Sections = (function() {
          * @param  function callback
          */
         list : function(callback) {
-            PvRequest.load('/api/site/sections', function (xml) {
+            PvRequest.load({'endpoint': '/api/site/sections'}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("sections")[0] == undefined) {
                     callback({error: true}); //Return an empty object
                     return;
@@ -68,7 +68,7 @@ Panvista.Articles = (function() {
                 url += 'pageLimit=' + parseInt(options.limit) + '&';
             }
 
-            PvRequest.load(url, function (xml) {
+            PvRequest.load({'endpoint': url}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("item").length < 0) {
                     callback({error: true}); //Return an empty object
                     return;
@@ -91,7 +91,7 @@ Panvista.Articles = (function() {
          * @param  function callback
          */
         get : function(id, callback) {
-            PvRequest.load('/xml/mobile/article?id=' + id + '&format=xml', function (xml) {
+            PvRequest.load({'endpoint': '/xml/mobile/article?id=' + id + '&format=xml'}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("webView").length < 0) {
                     callback({error: true}); //Return an empty object
                     return;
@@ -157,7 +157,7 @@ Panvista.Content = (function() {
                 url += '&query=' + encodeURIComponent(options.query);
             }
 
-            PvRequest.load(url, function (xml) {
+            PvRequest.load({'endpoint': url}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("documents")[0] == undefined) {
                     callback({error: true}); //Return an empty object
                     return;
@@ -169,13 +169,24 @@ Panvista.Content = (function() {
         get : function(section_id, id, callback) {
             var url = '/api/content/document?section_id=' + section_id + '&id=' + id;
 
-            PvRequest.load(url, function (xml) {
+            PvRequest.load({'endpoint': url}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("document")[0] == undefined) {
                     callback({error: true}); //Return an empty object
                     return;
                 }
                 Panvista.Analytics.add('viewItem', {id: id, data : {type : "content"}});
                 callback(xml.getElementsByTagName("document")[0]);
+            });
+        },
+        filters : function(id, callback) {
+            var url = '/api/content/filters?id=' + id;
+
+            PvRequest.load(url, function (xml) {
+                if (xml == null || xml.getElementsByTagName("filters")[0] == undefined) {
+                    callback({error: true}); //Return an empty object
+                    return;
+                }
+                callback(xml.getElementsByTagName("filters")[0]);
             });
         }
     }
@@ -192,7 +203,7 @@ Panvista.Search = (function() {
                 url += '&page=' + parseInt(options.page);
             }
 
-            PvRequest.load(url, function (xml) {
+            PvRequest.load({'endpoint': url}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("results")[0] == undefined) {
                     callback({error: true}); //Return an empty object
                     return;
@@ -225,7 +236,48 @@ Panvista.Analytics = (function() {
             action.device = Panvista.Util.getDevice();
             payload.payload = {};
             payload.payload[type] = [action];
-            PvRequest.load('/api/analytics/data?s=' + encodeURIComponent(JSON.stringify(payload)), function(xml) {});
+            PvRequest.load({'endpoint' : '/api/analytics/data?s=' + encodeURIComponent(JSON.stringify(payload)),
+                            'method' : 'POST'},
+                           function(xml) {});
+        }
+    }
+})();
+
+Panvista.Profile = (function() {
+    "use strict";
+
+    return {
+        fields : function(callback) {
+            PvRequest.load({'endpoint': '/api/profile/fields'}, function(xml) {
+                if (xml == null || xml.getElementsByTagName("fields")[0] == undefined) {
+                    callback({error: true}); //Return an empty object
+                    return;
+                }
+
+                callback(xml.getElementsByTagName("fields")[0]);
+            });
+        },
+        info : function(callback) {
+            PvRequest.load({'endpoint': '/api/profile/info'}, function(xml) {
+                if (xml == null || xml.getElementsByTagName("user")[0] == undefined) {
+                    callback({error: true}); //Return an empty object
+                    return;
+                }
+
+                callback(xml.getElementsByTagName("user")[0]);
+            });
+        },
+        update : function(params, callback) {
+            PvRequest.load({'endpoint' : '/api/profile/update',
+                            'params' : params,
+                            'method' : 'POST'},
+                           function(xml) {
+                               var result = [];
+                               for (var i = 0; i < xml.getElementsByTagName("message").length; i++) {
+                                   result[i] = {result: xml.getElementsByTagName("message")[i].getAttribute("type"), message: xml.getElementsByTagName("message")[i].textContent}
+                               }
+                               callback(result);
+                           });
         }
     }
 })();
@@ -343,17 +395,17 @@ PvRequest = (function() {
 
     return {
         pendingRequest : null,
-        load : function(endpoint, callback) {
+        load : function(options, callback) {
             var xml    = null,
                 result = null;
 
-            switch (endpoint) {
+            switch (options.endpoint) {
                 case '/api/site/sections':
                     result = typeof(sectionsBridge) == "object" ? sectionsBridge.getSections() : undefined;
                     xml    = typeof(result) != "undefined" ? Panvista.Util.parseXml(result) : null;
                 break;
                 default:
-                    result = typeof(sectionsBridge) == "object" ? sectionsBridge.getXmlData(endpoint) : undefined;
+                    result = typeof(sectionsBridge) == "object" ? sectionsBridge.getXmlData(options.endpoint) : undefined;
                     xml    = typeof(result) != "undefined" ? Panvista.Util.parseXml(result) : null;
                 break;
             };
@@ -363,16 +415,16 @@ PvRequest = (function() {
                 return;
             }
 
-            var url         = Panvista.Domain + endpoint + (endpoint.indexOf('?') == '-1' ? '?' : '&') + 'version=' + Panvista.ApiVersion + '&device=' + Panvista.Util.getDevice();
+            var url         = Panvista.Domain + options.endpoint + (options.endpoint.indexOf('?') == '-1' ? '?' : '&') + 'version=' + Panvista.ApiVersion + '&device=' + Panvista.Util.getDevice();
             var accessToken = typeof(userBridge) == "object" ? userBridge.getAccessToken() : undefined;
             var tokenSecret = typeof(userBridge) == "object" ? userBridge.getTokenSecret() : undefined;
-            var params      = "";
+            var params      = typeof(options.params) == "object" ? PvRequest.serialize(options.params) : "";
 
             if (typeof(accessToken) == 'string' && typeof(tokenSecret) == 'string') {
                 var request = function() {
                     var nonce = Math.floor(Math.random() * 999999);
                     var signature = CryptoJS.HmacSHA1(accessToken + "&" + nonce, tokenSecret);
-                    params = "nonce=" + nonce + "&access_token=" + accessToken + "&signature_method=HMAC-SHA1&version=1.0&signature=" + signature;
+                    params += "&nonce=" + nonce + "&access_token=" + accessToken + "&signature_method=HMAC-SHA1&version=1.0&signature=" + signature;
                     var request = new XMLHttpRequest();
                     request.open('POST', url, true);
                     request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -381,12 +433,11 @@ PvRequest = (function() {
             } else {
                 var request = function() {
                     var request = new XMLHttpRequest();
+                    var method = typeof(options.method) == 'string' ? options.method : 'GET';
+                    request.open(method, url, true);
 
-                    if (endpoint.substring(0, 19) == '/api/analytics/data') {
-                        request.open('POST', url, true);
+                    if (method == 'POST') {
                         request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    } else {
-                        request.open('GET', url, true);
                     }
 
                     return request;
@@ -412,12 +463,22 @@ PvRequest = (function() {
             request.setRequestHeader('X-JSMobileApp-Version', '0.7');
             request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-            if (endpoint.substring(0, 5) == '/xml/') {
+            if (options.endpoint.substring(0, 5) == '/xml/') {
                 request.setRequestHeader('X-JSMobileApp-Api', '6');
             }
 
             request.send(params);
             this.pendingRequest = request;
+        },
+        serialize : function(obj, prefix) {
+            var str = [];
+
+            for(var p in obj) {
+                var k = prefix ? prefix + "[" + p + "]" : p, v = obj[p];
+                str.push(typeof v == "object" ? PvRequest.serialize(v, k) : encodeURIComponent(k) + "=" + encodeURIComponent(v));
+            }
+
+            return str.join("&");
         }
     }
 })();
