@@ -6,8 +6,9 @@ userBridge = (function() {
     return {
         accessToken : undefined,
         tokenSecret : undefined,
+        appId       : "DEV-PVAPI",
         getAppId : function() {
-            return "DEV-PVAPI";
+            return userBridge.appId;
         },
         getAccessToken : function() {
             return userBridge.accessToken;
@@ -32,5 +33,8 @@ PvDev.Settings = (function() {
             userBridge.accessToken = accessToken;
             userBridge.tokenSecret = tokenSecret;
         },
+        setAppId : function(appId) {
+            userBridge.appId = appId;
+        }
     };
 })();

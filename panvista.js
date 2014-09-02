@@ -282,6 +282,67 @@ Panvista.Profile = (function() {
     }
 })();
 
+Panvista.Bookmark = (function() {
+    "use strict";
+
+    return {
+        list : function(callback) {
+            PvRequest.load({'endpoint': '/api/bookmark/list'}, function(xml) {
+                if (xml == null || xml.getElementsByTagName("data")[0] == undefined) {
+                    callback({error: true}); //Return an empty object
+                    return;
+                }
+
+                callback(xml.getElementsByTagName("data")[0]);
+            });
+        },
+        owns : function(params, callback) {
+            PvRequest.load({'endpoint' : '/api/bookmark/owns',
+                            'params' : params,
+                            'method' : 'POST'},
+                        function(xml) {
+                            if (xml == null || xml.getElementsByTagName("bookmark")[0] == undefined) {
+                                callback({error: true}); //Return an empty object
+                                return;
+                            }
+
+                            var bookmark = {};
+                            bookmark.owns = xml.getElementsByTagName("bookmark")[0].getAttribute("owns");
+                            bookmark.id = xml.getElementsByTagName("bookmark")[0].getAttribute("id");
+                            callback(bookmark);
+                        });
+        },
+        save : function(params, callback) {
+            PvRequest.load({'endpoint' : '/api/bookmark/save',
+                            'params' : params,
+                            'method' : 'POST'},
+                        function(xml) {
+                            if (xml == null || xml.getElementsByTagName("bookmark")[0] == undefined) {
+                                callback({error: true}); //Return an empty object
+                                return;
+                            }
+
+                            var bookmark = {};
+                            bookmark.id = xml.getElementsByTagName("bookmark")[0].getAttribute("id");
+                            callback(bookmark);
+                        });
+        },
+        delete : function(id, callback) {
+            PvRequest.load({'endpoint' : '/api/bookmark/delete',
+                            'params' : {'bookmarkIds' : JSON.stringify([id])},
+                            'method' : 'POST'},
+                        function(xml) {
+                            if (xml == null || xml.getElementsByTagName("message")[0] == undefined) {
+                                callback({error: true}); //Return an empty object
+                                return;
+                            }
+
+                            callback(xml.getElementsByTagName("message")[0]);
+                        });
+        }
+    }
+})();
+
 Panvista.Util = (function() {
     "use strict";
 
@@ -459,7 +520,7 @@ PvRequest = (function() {
             }
 
             request.onreadystatechange = responseCallback;
-            request.setRequestHeader('X-JSMobileApp-Id', 'PVJSApi');
+            request.setRequestHeader('X-JSMobileApp-Id', typeof(userBridge) == "object" ? userBridge.getAppId() : 'PVJSApi');
             request.setRequestHeader('X-JSMobileApp-Version', '0.7');
             request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
