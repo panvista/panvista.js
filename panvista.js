@@ -181,7 +181,7 @@ Panvista.Content = (function() {
         filters : function(id, callback) {
             var url = '/api/content/filters?id=' + id;
 
-            PvRequest.load(url, function (xml) {
+            PvRequest.load({'endpoint': url}, function (xml) {
                 if (xml == null || xml.getElementsByTagName("filters")[0] == undefined) {
                     callback({error: true}); //Return an empty object
                     return;
