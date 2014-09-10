@@ -297,6 +297,10 @@ Panvista.Bookmark = (function() {
             });
         },
         owns : function(params, callback) {
+            if (typeof(params.items) == 'object') {
+                params.items = encodeURIComponent(JSON.stringify(params.items));
+            }
+
             PvRequest.load({'endpoint' : '/api/bookmark/owns',
                             'params' : params,
                             'method' : 'POST'},
@@ -306,10 +310,18 @@ Panvista.Bookmark = (function() {
                                 return;
                             }
 
-                            var bookmark = {};
-                            bookmark.owns = xml.getElementsByTagName("bookmark")[0].getAttribute("owns");
-                            bookmark.id = xml.getElementsByTagName("bookmark")[0].getAttribute("id");
-                            callback(bookmark);
+                            var bookmarks = [];
+
+                            for (var i = 0; i < xml.getElementsByTagName("bookmark").length; i++) {
+                                var bookmark = {};
+                                for (var x = 0; x < xml.getElementsByTagName("bookmark")[i].attributes.length; x++) {
+                                    bookmark[xml.getElementsByTagName("bookmark")[i].attributes[x].nodeName] = xml.getElementsByTagName("bookmark")[i].attributes[x].nodeValue;
+                                }
+
+                                bookmarks.push(bookmark);
+                            }
+
+                            callback(bookmarks);
                         });
         },
         save : function(params, callback) {
