@@ -362,6 +362,7 @@ Panvista.Util = (function() {
         device : null,
         paramKey : 'panvista-param-',
         params : new Object(),
+        hooks : [],
         init : function() {
             for (var i = 0; i < localStorage.length; i++) {
                 if (localStorage.key(i).substring(0, Panvista.Util.paramKey.length) == Panvista.Util.paramKey) {
@@ -456,6 +457,28 @@ Panvista.Util = (function() {
         },
         parseXml : function(xml) {
             return (new window.DOMParser()).parseFromString(xml, "text/xml");
+        },
+        /**
+         * Add hook
+         *
+         * @param function hook
+         */
+        addHook : function(hook) {
+            this.hooks.push(hook);
+        },
+        /**
+         * Clear hooks array
+         */
+        clearHooks : function() {
+            this.hooks = [];
+        },
+        /**
+         * Execute functions stored in hooks array
+         */
+        executeHooks : function() {
+            for (var i = 0; i < this.hooks.length; i++){
+                this.hooks[i]();
+            }
         }
     };
 })();
