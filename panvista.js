@@ -286,8 +286,18 @@ Panvista.Bookmark = (function() {
     "use strict";
 
     return {
-        list : function(callback) {
-            PvRequest.load({'endpoint': '/api/bookmark/list'}, function(xml) {
+        list : function(options, callback) {
+            var endpoint = '/api/bookmark/list?';
+
+            if (!isNaN(parseInt(options.page))) {
+                endpoint += '&pageNumber=' + parseInt(options.page);
+            }
+
+            if (!isNaN(parseInt(options.limit))) {
+                endpoint += '&pageLimit=' + parseInt(options.limit);
+            }
+
+            PvRequest.load({'endpoint': endpoint}, function(xml) {
                 if (xml == null || xml.getElementsByTagName("data")[0] == undefined) {
                     callback({error: true}); //Return an empty object
                     return;
