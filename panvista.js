@@ -140,9 +140,11 @@ Panvista.Content = (function() {
     return {
         list : function(id, options, callback) {
             var url = '/api/content/list?id=' + id;
+            var trackOpen = true;
 
             if (!isNaN(parseInt(options.page))) {
                 url += '&page=' + parseInt(options.page);
+                trackOpen = parseInt(options.page) == 1;
             }
 
             if (!isNaN(parseInt(options.limit))) {
@@ -151,10 +153,12 @@ Panvista.Content = (function() {
 
             if (typeof(options.filter) == "object") {
                 url += '&filter=' + encodeURIComponent(JSON.stringify(options.filter));
+                trackOpen = false;
             }
 
             if (typeof(options.query) == "string") {
                 url += '&query=' + encodeURIComponent(options.query);
+                trackOpen = false;
             }
 
             if (typeof(options.useAnalysis) != 'undefined') {
@@ -166,7 +170,10 @@ Panvista.Content = (function() {
                     callback({error: true}); //Return an empty object
                     return;
                 }
-                Panvista.Analytics.add('viewCategory', {id: id});
+
+                if (trackOpen) {
+                    Panvista.Analytics.add('viewCategory', {id: id});
+                }
                 callback(xml.getElementsByTagName("documents")[0]);
             });
         },
@@ -178,7 +185,7 @@ Panvista.Content = (function() {
                     callback({error: true}); //Return an empty object
                     return;
                 }
-                Panvista.Analytics.add('viewItem', {id: id, data : {type : "content"}});
+                Panvista.Analytics.add('viewItem', {id: id, data : {type : "content", section_id: section_id}});
                 callback(xml.getElementsByTagName("document")[0]);
             });
         },
